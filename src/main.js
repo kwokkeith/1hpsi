@@ -26,22 +26,6 @@ function valueColor(v) {
 }
 
 let DATA;
-//let DATA = generateData();
-
-function generateData() {
-    const base = new Date('2026-04-26T00:00:00');
-    const rows = [];
-    const vals = [120, 180, 80, 250, 350, 420];
-    for (let i = 0; i < 30; i++) {
-        const row = { timestamp: new Date(base.getTime() + i * 3600_000).toISOString().slice(0,-1) };
-        for (let s = 0; s < SERIES_LABELS.length; s++) {
-            vals[s] = Math.max(0, vals[s] + (Math.random() - .48 + s * .005) * 40);
-            row[SERIES_LABELS[s]] = parseFloat(vals[s].toFixed(1));
-        }
-        rows.push(row);
-    }
-    return rows;
-}
 
 // null = all
 let activeSeries = null;
@@ -367,15 +351,26 @@ function buildSummary() {
     const latest = DATA[DATA.length - 1];
     const dt = new Date(latest.timestamp);
     const dateStr = dt.toLocaleString([], {
-        month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
     });
 
     document.getElementById('summary-title').textContent = `Latest Reading — ${dateStr}`;
 
+    const DIRECTION_MAP = {
+        'Overall': 'overall',
+        'North': 'north',
+        'South': 'south',
+        'East': 'east',
+        'West': 'west',
+        'Central': 'central'
+    };
+
     SERIES_LABELS.forEach((k, i) => {
         const card = document.createElement('div');
-        card.className = 'summary-card';
+        card.className = `summary-card ${DIRECTION_MAP[k]}`; 
 
         const label = document.createElement('div');
         label.className = 'summary-label';
@@ -475,9 +470,20 @@ async function refreshAll() {
     buildSummary();
 }
 
-
 async function update() {
     DATA = await invoke("update");
+}
+
+async function getAppVersion() {
+    const version = await invoke("get_app_version");
+    const latestVersion = await invoke("check_latest_release_version");
+    document.getElementById('app-version').innerHTML = 
+        `<h2>Version</h2>
+        <p>v${version}</p>`;
+    if (version != latestVersion) {
+        document.getElementById('app-version').innerHTML += 
+        `<p>Update Available: <a href="#" onclick="openExternal('https://github.com/agx-hv/1hpsi/releases/latest')">v${latestVersion}</a></p>`;
+    }
 }
 
 async function openExternal(url) {
@@ -488,5 +494,6 @@ window.addEventListener("DOMContentLoaded", () => {
     /* ── init ── */
     buildLegend();
     refreshAll();
+    getAppVersion();
     setInterval(refreshAll, REFRESH_INTERVAL);
 });

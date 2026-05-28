@@ -1,4 +1,22 @@
 use std::collections::HashMap;
+use ureq::ResponseExt;
+
+#[tauri::command]
+fn get_app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+fn check_latest_release_version() -> String {
+    if let Ok(res) = ureq::get("https://github.com/agx-hv/1hpsi/releases/latest").call() {
+        return res
+            .get_uri()
+            .to_string()
+            .trim_start_matches("https://github.com/agx-hv/1hpsi/releases/tag/v")
+            .to_string();
+    }
+    "".to_string()
+}
 
 #[tauri::command]
 fn update() -> Vec<HashMap<String, String>> {
@@ -55,30 +73,36 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![update])
+        .invoke_handler(tauri::generate_handler![
+            update,
+            get_app_version,
+            check_latest_release_version,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 /// Fetches PSI data from the API, optionally for a specific date
-/// returns a structured PsiResponse 
+/// returns a structured PsiResponse
 fn fetch_psi() -> Result<PsiResponse, String> {
     use network::client::get;
     use psi::parser::parse_psi_response;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    // Construct API path 
+    // Construct API path
     let epoch_ns = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|e| e.to_string())?
         .as_nanos();
-    let path = format!("https://www.haze.gov.sg/api/airquality/jsondata/{}", epoch_ns);
+    let path = format!(
+        "https://www.haze.gov.sg/api/airquality/jsondata/{}",
+        epoch_ns
+    );
 
     // Send GET request and read raw response
     let body = get(&path).map_err(|e| e.to_string())?;
 
-    let parsed = parse_psi_response(&body)
-        .map_err(|e| e.to_string())?;
+    let parsed = parse_psi_response(&body).map_err(|e| e.to_string())?;
 
     // Return the parsed PSI response
     Ok(parsed)

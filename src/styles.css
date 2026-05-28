@@ -173,6 +173,12 @@ body {
   line-height: 1.6;
 }
 
+.hero-inner a {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
 /* ── footer ── */
 .app-footer {
   max-width: 1100px;
@@ -404,18 +410,44 @@ body {
 
 /* ── summary ── */
 .summary-content {
-  padding: 20px 18px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr 1fr;
+
+  grid-template-areas:
+    "overall overall overall"
+    ". north ."
+    "west central east"
+    ". south .";
+
+  gap: 12px;
+  padding: 20px 18px;
+
+  place-items: center;
 }
 
 .summary-card {
-  padding: 18px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  min-width: 80px;
+  min-height: 80px;
 }
+
+.summary-card.overall  { grid-area: overall; width: 100%; min-height: 100px; }
+.summary-card.north    { grid-area: north; }
+.summary-card.south    { grid-area: south; }
+.summary-card.east     { grid-area: east; }
+.summary-card.west     { grid-area: west; }
+.summary-card.central  { grid-area: central; }
 
 .summary-label {
   font-size: 12px;
