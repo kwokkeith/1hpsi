@@ -480,7 +480,7 @@ async function getAppVersion() {
     document.getElementById('app-version').innerHTML = 
         `<h2>Version</h2>
         <p>v${version}</p>`;
-    if (version != latestVersion) {
+    if (version != latestVersion && latestVersion != "") {
         document.getElementById('app-version').innerHTML += 
         `<p>Update Available: <a href="#" onclick="openExternal('https://github.com/agx-hv/1hpsi/releases/latest')">v${latestVersion}</a></p>`;
     }

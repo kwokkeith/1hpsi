@@ -20,39 +20,41 @@ fn check_latest_release_version() -> String {
 
 #[tauri::command]
 fn update() -> Vec<HashMap<String, String>> {
-    let parsed = fetch_psi().unwrap();
-    let pm25_data = parsed.chart_1hr_pm25;
-    let (north, south, east, west, central) = (
-        pm25_data.north.output(),
-        pm25_data.south.output(),
-        pm25_data.east.output(),
-        pm25_data.west.output(),
-        pm25_data.central.output(),
-    );
-    let mut output = vec![];
-    for i in 0..24 {
-        let mut record = HashMap::new();
-        let (n, s, e, w, c) = (
-            north[i].1.clone(),
-            south[i].1.clone(),
-            east[i].1.clone(),
-            west[i].1.clone(),
-            central[i].1.clone(),
+    if let Ok(parsed) = fetch_psi() {
+        let pm25_data = parsed.chart_1hr_pm25;
+        let (north, south, east, west, central) = (
+            pm25_data.north.output(),
+            pm25_data.south.output(),
+            pm25_data.east.output(),
+            pm25_data.west.output(),
+            pm25_data.central.output(),
         );
-        let mut mean = 0.0;
-        for v in [&n, &s, &e, &w, &c] {
-            mean += str::parse::<f32>(v).unwrap() / 5.0;
+        let mut output = vec![];
+        for i in 0..24 {
+            let mut record = HashMap::new();
+            let (n, s, e, w, c) = (
+                north[i].1.clone(),
+                south[i].1.clone(),
+                east[i].1.clone(),
+                west[i].1.clone(),
+                central[i].1.clone(),
+            );
+            let mut mean = 0.0;
+            for v in [&n, &s, &e, &w, &c] {
+                mean += str::parse::<f32>(v).unwrap_or(0.0) / 5.0;
+            }
+            record.insert("timestamp".to_string(), north[i].0.clone());
+            record.insert("Overall".to_string(), mean.round().to_string());
+            record.insert("North".to_string(), n);
+            record.insert("South".to_string(), s);
+            record.insert("East".to_string(), e);
+            record.insert("West".to_string(), w);
+            record.insert("Central".to_string(), c);
+            output.push(record);
         }
-        record.insert("timestamp".to_string(), north[i].0.clone());
-        record.insert("Overall".to_string(), mean.round().to_string());
-        record.insert("North".to_string(), n);
-        record.insert("South".to_string(), s);
-        record.insert("East".to_string(), e);
-        record.insert("West".to_string(), w);
-        record.insert("Central".to_string(), c);
-        output.push(record);
+        return output;
     }
-    output
+    vec![]
 }
 
 mod network;
