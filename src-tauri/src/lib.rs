@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use ureq::ResponseExt;
-use std::sync::Mutex;
+use std::cell::RefCell;
 use tauri::State;
 
 #[tauri::command]
@@ -95,7 +95,7 @@ pub fn run() {
 }
 
 #[derive(Default)]
-struct PsiCache(Mutex<Option<PsiResponse>>);
+struct PsiCache(RefCell<Option<PsiResponse>>);
 
 /// Fetches PSI data from the API, optionally for a specific date
 /// returns a structured PsiResponse
@@ -124,12 +124,12 @@ fn fetch_psi(cache: &State<PsiCache>) -> Result<PsiResponse, String> {
     match body {
         Ok(parsed) => {
             // Cache the parsed response
-            let mut cache_lock = cache.0.lock().map_err(|e| e.to_string())?;
+            let mut cache_lock = cache.0.borrow_mut();
             *cache_lock = Some(parsed.clone()); // Cache the parsed response
             Ok(parsed)
         }
-        Err(e) => match cache.0.lock().map_err(|e| e.to_string())? {
-            Some(cached) => Ok(cached), // Return cached data
+        Err(e) => match cache.0.borrow().as_ref() {
+            Some(cached) => Ok(cached.clone()), // Return cached data
             None => Err(format!("No cache data found: {e}"))
         }
     }
