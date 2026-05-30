@@ -24,7 +24,7 @@ pub struct PsiResponse {
     pub chart_o3: Chart,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Chart {
     #[serde(rename = "DivId")]
     pub div_id: String,
@@ -45,7 +45,7 @@ pub struct Chart {
     pub central: RegionSeries,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegionSeries {
     #[serde(rename = "Data")]
     pub data: Vec<DataPoint>,
@@ -67,7 +67,7 @@ impl RegionSeries {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct DataPoint {
     pub value: f32,
 
